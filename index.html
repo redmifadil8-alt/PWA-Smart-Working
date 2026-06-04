@@ -1,0 +1,2751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Smart Task Manager & Life Control - Aplikasi produktivitas pribadi offline">
+    <title>Smart Task Manager</title>
+
+    <!-- GitHub Pages: relative paths -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="canonical" href="https://username.github.io/smart-task-manager/">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✅%3C/text%3E%3C/svg%3E">
+
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --border: #334155;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .light-mode {
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon { font-size: 28px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 4px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+        .nav-item .badge {
+            position: absolute;
+            right: 12px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .nav-icon { font-size: 20px; width: 24px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .theme-toggle, .install-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover, .install-btn:hover { background: var(--bg-hover); }
+        .install-btn { margin-top: 8px; display: none; }
+        .install-btn.show { display: flex; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .mobile-header {
+            display: none;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .mobile-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .content-area {
+            padding: 28px 32px;
+            max-width: 1400px;
+        }
+
+        .page-title { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+        .page-subtitle { color: var(--text-muted); font-size: 15px; margin-bottom: 28px; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 24px;
+            transition: var(--transition);
+        }
+
+        .card:hover { box-shadow: var(--shadow); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title { font-size: 18px; font-weight: 600; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--bg-hover); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+
+        /* Grid */
+        .grid { display: grid; gap: 20px; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* Stats */
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.danger::before { background: var(--danger); }
+        .stat-card.info::before { background: var(--info); }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value { font-size: 32px; font-weight: 700; }
+
+        .stat-change {
+            font-size: 13px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        /* Progress Ring */
+        .progress-ring-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .progress-ring svg { transform: rotate(-90deg); }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: var(--bg-hover);
+            stroke-width: 10;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .progress-ring-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Score Badge */
+        .score-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .score-low { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .score-medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .score-good { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .score-excellent { background: rgba(59, 130, 246, 0.15); color: var(--primary); }
+
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 15px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea { resize: vertical; min-height: 100px; }
+
+        /* Task Item */
+        .task-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .task-item:hover { border-color: var(--primary); }
+        .task-item.completed { opacity: 0.6; }
+        .task-item.completed .task-title { text-decoration: line-through; }
+
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: var(--transition);
+        }
+
+        .task-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .task-content { flex: 1; }
+        .task-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .task-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+        .task-meta span {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .priority-badge {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .priority-low { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .priority-medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .priority-high { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .priority-critical { background: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .task-item:hover .task-actions { opacity: 1; }
+
+        .task-actions button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .task-actions button:hover { background: var(--bg-hover); color: var(--text); }
+
+        /* Habit */
+        .habit-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .habit-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .habit-info { flex: 1; }
+        .habit-name { font-weight: 600; font-size: 15px; }
+        .habit-streak {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .habit-check {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .habit-check:hover { border-color: var(--success); }
+        .habit-check.checked {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        /* Calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 10px;
+            text-transform: uppercase;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .calendar-day:hover { background: var(--bg-hover); }
+        .calendar-day.today { background: var(--primary); color: white; }
+        .calendar-day.other-month { color: var(--text-muted); opacity: 0.5; }
+        .calendar-day.has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--warning);
+        }
+
+        /* Pomodoro */
+        .pomodoro-timer { text-align: center; padding: 40px; }
+        .timer-display {
+            font-size: 80px;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 30px;
+            letter-spacing: -2px;
+        }
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .timer-mode { display: flex; gap: 8px; justify-content: center; }
+        .mode-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .mode-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Finance */
+        .finance-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .finance-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .finance-card.income { border-top: 3px solid var(--success); }
+        .finance-card.expense { border-top: 3px solid var(--danger); }
+        .finance-card.balance { border-top: 3px solid var(--primary); }
+
+        .finance-amount { font-size: 24px; font-weight: 700; margin-top: 8px; }
+        .finance-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Chart */
+        .chart-container { width: 100%; height: 300px; position: relative; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-header {
+            padding: 24px 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-body { padding: 20px 24px 24px; }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+        /* Section */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .filter-tab:hover { background: var(--bg-hover); }
+        .filter-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Goal Progress */
+        .goal-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .goal-title { font-weight: 600; }
+        .goal-period {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--bg-hover);
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--info));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .goal-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Note */
+        .note-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .note-item:hover { border-color: var(--primary); }
+        .note-title { font-weight: 600; margin-bottom: 6px; }
+        .note-preview { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+        .note-date { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+        /* Transaction */
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .transaction-item:last-child { border-bottom: none; }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .transaction-info { flex: 1; }
+        .transaction-title { font-weight: 500; }
+        .transaction-category { font-size: 12px; color: var(--text-muted); }
+        .transaction-amount { font-weight: 600; font-size: 15px; }
+        .transaction-amount.income { color: var(--success); }
+        .transaction-amount.expense { color: var(--danger); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .finance-summary { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-header { display: flex; }
+            .content-area { padding: 20px 16px; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .timer-display { font-size: 56px; }
+            .task-actions { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in { animation: fadeIn 0.4s ease; }
+
+        /* Review */
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .review-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .review-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .review-label { font-size: 13px; color: var(--text-muted); }
+
+        /* Pie Chart */
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        /* Bar Chart */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 200px;
+            padding-bottom: 30px;
+            position: relative;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--primary), var(--info));
+            border-radius: 6px 6px 0 0;
+            min-height: 4px;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Checklist */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .checklist-item:last-child { border-bottom: none; }
+
+        .checklist-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .checklist-check.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .checklist-text { flex: 1; font-size: 14px; }
+        .checklist-text.checked {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.active { display: block; }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">✅</span>
+                    <span>Smart Task</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                    <span class="badge" id="nav-badge-dashboard" style="display:none">0</span>
+                </div>
+                <div class="nav-item" data-page="tasks">
+                    <span class="nav-icon">📝</span>
+                    <span>Tasks</span>
+                    <span class="badge" id="nav-badge-tasks" style="display:none">0</span>
+                </div>
+                <div class="nav-item" data-page="habits">
+                    <span class="nav-icon">🔥</span>
+                    <span>Habits</span>
+                    <span class="badge" id="nav-badge-habits" style="display:none">0</span>
+                </div>
+                <div class="nav-item" data-page="calendar">
+                    <span class="nav-icon">📅</span>
+                    <span>Kalender</span>
+                </div>
+                <div class="nav-item" data-page="pomodoro">
+                    <span class="nav-icon">⏱️</span>
+                    <span>Pomodoro</span>
+                </div>
+                <div class="nav-item" data-page="goals">
+                    <span class="nav-icon">🎯</span>
+                    <span>Goals</span>
+                </div>
+                <div class="nav-item" data-page="finance">
+                    <span class="nav-icon">💰</span>
+                    <span>Keuangan</span>
+                </div>
+                <div class="nav-item" data-page="notes">
+                    <span class="nav-icon">📒</span>
+                    <span>Catatan</span>
+                </div>
+                <div class="nav-item" data-page="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span>Analitik</span>
+                </div>
+                <div class="nav-item" data-page="review">
+                    <span class="nav-icon">📋</span>
+                    <span>Review</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark Mode</span>
+                </button>
+                <button class="install-btn" id="installBtn" onclick="installPWA()">
+                    <span>📲</span>
+                    <span>Install App</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="mobile-header">
+                <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+                <span class="mobile-title">Smart Task</span>
+                <button class="menu-btn" onclick="showAddModal()">+</button>
+            </div>
+
+            <div class="content-area" id="contentArea">
+                <!-- DASHBOARD -->
+                <div class="section active" id="dashboard">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle" id="dashboardDate">Selamat datang kembali!</p>
+
+                    <div class="grid grid-4" style="margin-bottom:24px">
+                        <div class="stat-card">
+                            <div class="stat-label">Tugas Hari Ini</div>
+                            <div class="stat-value" id="dash-today-tasks">0</div>
+                            <div class="stat-change" id="dash-today-change">-</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label">Tugas Selesai</div>
+                            <div class="stat-value" id="dash-completed">0</div>
+                            <div class="stat-change positive">✓ Selesai</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">Tugas Tertunda</div>
+                            <div class="stat-value" id="dash-pending">0</div>
+                            <div class="stat-change negative">⚠️ Perlu perhatian</div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-label">Deadline Terdekat</div>
+                            <div class="stat-value" id="dash-deadline">-</div>
+                            <div class="stat-change" id="dash-deadline-days">-</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Productivity Score</span>
+                                <span class="score-badge" id="dash-score-badge">-</span>
+                            </div>
+                            <div class="progress-ring-container">
+                                <div class="progress-ring">
+                                    <svg width="140" height="140">
+                                        <circle class="progress-ring-bg" cx="70" cy="70" r="60"/>
+                                        <circle class="progress-ring-fill" id="dash-score-ring" cx="70" cy="70" r="60"
+                                            stroke-dasharray="377" stroke-dashoffset="377"/>
+                                    </svg>
+                                    <div class="progress-ring-text" id="dash-score-value">0</div>
+                                </div>
+                                <div class="progress-label" id="dash-score-label">-</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Habit Hari Ini</span>
+                                <button class="btn btn-sm btn-outline" onclick="navigateTo('habits')">Lihat Semua</button>
+                            </div>
+                            <div id="dash-habits-list">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">🔥</div>
+                                    <div class="empty-state-title">Belum ada habit</div>
+                                    <p>Tambah habit untuk mulai tracking</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:20px">
+                        <div class="card-header">
+                            <span class="card-title">Tugas Mendesak</span>
+                            <button class="btn btn-sm btn-outline" onclick="navigateTo('tasks')">Lihat Semua</button>
+                        </div>
+                        <div id="dash-urgent-tasks"></div>
+                    </div>
+                </div>
+
+                <!-- TASKS -->
+                <div class="section" id="tasks">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <h1 class="page-title">Task Manager</h1>
+                        <button class="btn btn-primary" onclick="openTaskModal()">+ Tambah Tugas</button>
+                    </div>
+                    <p class="page-subtitle">Kelola semua tugas dan deadline Anda</p>
+
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" onclick="filterTasks('all')">Semua</div>
+                        <div class="filter-tab" onclick="filterTasks('today')">Hari Ini</div>
+                        <div class="filter-tab" onclick="filterTasks('upcoming')">Mendatang</div>
+                        <div class="filter-tab" onclick="filterTasks('completed')">Selesai</div>
+                        <div class="filter-tab" onclick="filterTasks('archived')">Arsip</div>
+                    </div>
+
+                    <div id="tasks-list"></div>
+                </div>
+
+                <!-- HABITS -->
+                <div class="section" id="habits">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <h1 class="page-title">Habit Tracker</h1>
+                        <button class="btn btn-primary" onclick="openHabitModal()">+ Tambah Habit</button>
+                    </div>
+                    <p class="page-subtitle">Bangun kebiasaan positif setiap hari</p>
+
+                    <div id="habits-list"></div>
+                </div>
+
+                <!-- CALENDAR -->
+                <div class="section" id="calendar">
+                    <h1 class="page-title">Kalender</h1>
+                    <p class="page-subtitle" id="calendar-subtitle">-</p>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title" id="calendar-month-year">-</span>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn btn-sm btn-outline" onclick="changeMonth(-1)">←</button>
+                                <button class="btn btn-sm btn-outline" onclick="changeMonth(1)">→</button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid"></div>
+                    </div>
+
+                    <div class="card" style="margin-top:20px">
+                        <div class="card-header">
+                            <span class="card-title">Agenda Hari Ini</span>
+                        </div>
+                        <div id="calendar-agenda"></div>
+                    </div>
+                </div>
+
+                <!-- POMODORO -->
+                <div class="section" id="pomodoro">
+                    <h1 class="page-title">Pomodoro Timer</h1>
+                    <p class="page-subtitle">Tingkatkan fokus dengan teknik Pomodoro</p>
+
+                    <div class="card pomodoro-timer">
+                        <div class="timer-mode">
+                            <button class="mode-btn active" onclick="setPomodoroMode('focus')">Fokus</button>
+                            <button class="mode-btn" onclick="setPomodoroMode('short')">Istirahat Pendek</button>
+                            <button class="mode-btn" onclick="setPomodoroMode('long')">Istirahat Panjang</button>
+                        </div>
+
+                        <div class="timer-display" id="timer-display">25:00</div>
+
+                        <div class="timer-controls">
+                            <button class="btn btn-primary" id="timer-start" onclick="startTimer()">▶ Mulai</button>
+                            <button class="btn btn-outline" onclick="pauseTimer()">⏸ Pause</button>
+                            <button class="btn btn-outline" onclick="resetTimer()">↺ Reset</button>
+                        </div>
+
+                        <div style="margin-top:30px">
+                            <div class="grid grid-3" style="max-width:500px;margin:0 auto">
+                                <div class="stat-card" style="text-align:center">
+                                    <div class="stat-label">Total Sesi</div>
+                                    <div class="stat-value" id="pomo-sessions">0</div>
+                                </div>
+                                <div class="stat-card" style="text-align:center">
+                                    <div class="stat-label">Jam Fokus</div>
+                                    <div class="stat-value" id="pomo-hours">0</div>
+                                </div>
+                                <div class="stat-card" style="text-align:center">
+                                    <div class="stat-label">Hari Ini</div>
+                                    <div class="stat-value" id="pomo-today">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GOALS -->
+                <div class="section" id="goals">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <h1 class="page-title">Goal Management</h1>
+                        <button class="btn btn-primary" onclick="openGoalModal()">+ Tambah Target</button>
+                    </div>
+                    <p class="page-subtitle">Tetapkan dan capai target Anda</p>
+
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" onclick="filterGoals('all')">Semua</div>
+                        <div class="filter-tab" onclick="filterGoals('daily')">Harian</div>
+                        <div class="filter-tab" onclick="filterGoals('weekly')">Mingguan</div>
+                        <div class="filter-tab" onclick="filterGoals('monthly')">Bulanan</div>
+                        <div class="filter-tab" onclick="filterGoals('yearly')">Tahunan</div>
+                    </div>
+
+                    <div id="goals-list"></div>
+                </div>
+
+                <!-- FINANCE -->
+                <div class="section" id="finance">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <h1 class="page-title">Manajemen Keuangan</h1>
+                        <button class="btn btn-primary" onclick="openFinanceModal()">+ Tambah Transaksi</button>
+                    </div>
+                    <p class="page-subtitle">Kelola pemasukan, pengeluaran, dan tabungan</p>
+
+                    <div class="finance-summary">
+                        <div class="finance-card income">
+                            <div class="finance-label">Total Pemasukan</div>
+                            <div class="finance-amount" id="finance-income">Rp0</div>
+                        </div>
+                        <div class="finance-card expense">
+                            <div class="finance-label">Total Pengeluaran</div>
+                            <div class="finance-amount" id="finance-expense">Rp0</div>
+                        </div>
+                        <div class="finance-card balance">
+                            <div class="finance-label">Sisa Saldo</div>
+                            <div class="finance-amount" id="finance-balance">Rp0</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Riwayat Transaksi</span>
+                            </div>
+                            <div id="finance-transactions"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Distribusi Pengeluaran</span>
+                            </div>
+                            <div class="chart-container" id="finance-chart">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">📊</div>
+                                    <p>Belum ada data pengeluaran</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOTES -->
+                <div class="section" id="notes">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <h1 class="page-title">Catatan</h1>
+                        <button class="btn btn-primary" onclick="openNoteModal()">+ Catatan Baru</button>
+                    </div>
+                    <p class="page-subtitle">Simpan ide, checklist, dan catatan penting</p>
+
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" onclick="filterNotes('all')">Semua</div>
+                        <div class="filter-tab" onclick="filterNotes('quick')">Quick Notes</div>
+                        <div class="filter-tab" onclick="filterNotes('checklist')">Checklist</div>
+                    </div>
+
+                    <div id="notes-list"></div>
+                </div>
+
+                <!-- ANALYTICS -->
+                <div class="section" id="analytics">
+                    <h1 class="page-title">Analitik</h1>
+                    <p class="page-subtitle">Analisis produktivitas dan pola aktivitas</p>
+
+                    <div class="grid grid-2" style="margin-bottom:20px">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Tugas per Kategori</span>
+                            </div>
+                            <div class="chart-container" id="chart-tasks-category"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Produktivitas Mingguan</span>
+                            </div>
+                            <div class="chart-container" id="chart-productivity"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Habit Terbaik</span>
+                            </div>
+                            <div id="analytics-best-habits"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Habit Perlu Perhatian</span>
+                            </div>
+                            <div id="analytics-worst-habits"></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:20px">
+                        <div class="card-header">
+                            <span class="card-title">Insight</span>
+                        </div>
+                        <div id="analytics-insights"></div>
+                    </div>
+                </div>
+
+                <!-- REVIEW -->
+                <div class="section" id="review">
+                    <h1 class="page-title">Review</h1>
+                    <p class="page-subtitle">Evaluasi mingguan dan bulanan</p>
+
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" onclick="showReview('weekly')">Mingguan</div>
+                        <div class="filter-tab" onclick="showReview('monthly')">Bulanan</div>
+                    </div>
+
+                    <div id="review-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="card-title">Review Minggu Ini</span>
+                                <span class="score-badge score-good" id="review-score">-</span>
+                            </div>
+                            <div class="review-grid" id="weekly-stats"></div>
+                        </div>
+
+                        <div class="card" style="margin-top:20px">
+                            <div class="card-header">
+                                <span class="card-title">Perkembangan</span>
+                            </div>
+                            <div class="chart-container" id="review-chart"></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:20px">
+                        <div class="card-header">
+                            <span class="card-title">Backup & Restore</span>
+                        </div>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <button class="btn btn-primary" onclick="exportData()">📤 Export JSON</button>
+                            <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
+                            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="taskModalTitle">Tambah Tugas</span>
+                <button class="modal-close" onclick="closeModal('taskModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Judul</label>
+                    <input type="text" class="form-input" id="taskTitle" placeholder="Masukkan judul tugas">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deskripsi</label>
+                    <textarea class="form-textarea" id="taskDesc" placeholder="Deskripsi tugas (opsional)"></textarea>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select class="form-select" id="taskCategory">
+                            <option value="Pekerjaan">Pekerjaan</option>
+                            <option value="Kuliah">Kuliah</option>
+                            <option value="Pribadi">Pribadi</option>
+                            <option value="Proyek">Proyek</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Prioritas</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="low">Rendah</option>
+                            <option value="medium" selected>Sedang</option>
+                            <option value="high">Tinggi</option>
+                            <option value="critical">Kritis</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Deadline</label>
+                    <input type="datetime-local" class="form-input" id="taskDeadline">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="taskStatus">
+                        <option value="not_started">Belum Dimulai</option>
+                        <option value="in_progress">Sedang Dikerjakan</option>
+                        <option value="completed">Selesai</option>
+                        <option value="postponed">Ditunda</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" style="width:100%" onclick="saveTask()">Simpan Tugas</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="habitModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="habitModalTitle">Tambah Habit</span>
+                <button class="modal-close" onclick="closeModal('habitModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nama Habit</label>
+                    <input type="text" class="form-input" id="habitName" placeholder="Contoh: Belajar Inggris">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon</label>
+                    <select class="form-select" id="habitIcon">
+                        <option value="📚">📚 Belajar</option>
+                        <option value="🏃">🏃 Olahraga</option>
+                        <option value="💧">💧 Minum Air</option>
+                        <option value="🧘">🧘 Meditasi</option>
+                        <option value="💰">💰 Menabung</option>
+                        <option value="🙏">🙏 Ibadah</option>
+                        <option value="📖">📖 Membaca</option>
+                        <option value="💻">💻 Coding</option>
+                        <option value="🎸">🎸 Musik</option>
+                        <option value="✍️">✍️ Menulis</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Harian</label>
+                    <input type="text" class="form-input" id="habitTarget" placeholder="Contoh: 30 menit, 1 kali, 2 liter">
+                </div>
+                <button class="btn btn-primary" style="width:100%" onclick="saveHabit()">Simpan Habit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="goalModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="goalModalTitle">Tambah Target</span>
+                <button class="modal-close" onclick="closeModal('goalModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nama Target</label>
+                    <input type="text" class="form-input" id="goalName" placeholder="Contoh: Menyelesaikan 20 tugas">
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Periode</label>
+                        <select class="form-select" id="goalPeriod">
+                            <option value="daily">Harian</option>
+                            <option value="weekly">Mingguan</option>
+                            <option value="monthly">Bulanan</option>
+                            <option value="yearly">Tahunan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Angka</label>
+                        <input type="number" class="form-input" id="goalTarget" placeholder="20">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Satuan</label>
+                    <input type="text" class="form-input" id="goalUnit" placeholder="tugas, jam, buku, rupiah">
+                </div>
+                <button class="btn btn-primary" style="width:100%" onclick="saveGoal()">Simpan Target</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="financeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Tambah Transaksi</span>
+                <button class="modal-close" onclick="closeModal('financeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Jenis</label>
+                    <select class="form-select" id="financeType">
+                        <option value="income">Pemasukan</option>
+                        <option value="expense">Pengeluaran</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jumlah (Rp)</label>
+                    <input type="number" class="form-input" id="financeAmount" placeholder="50000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kategori</label>
+                    <select class="form-select" id="financeCategory">
+                        <option value="Makanan">🍽️ Makanan</option>
+                        <option value="Transportasi">🚗 Transportasi</option>
+                        <option value="Pendidikan">📚 Pendidikan</option>
+                        <option value="Hiburan">🎮 Hiburan</option>
+                        <option value="Kesehatan">💊 Kesehatan</option>
+                        <option value="Belanja">🛒 Belanja</option>
+                        <option value="Tabungan">💰 Tabungan</option>
+                        <option value="Gaji">💵 Gaji</option>
+                        <option value="Lainnya">📦 Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Keterangan</label>
+                    <input type="text" class="form-input" id="financeNote" placeholder="Keterangan transaksi">
+                </div>
+                <button class="btn btn-primary" style="width:100%" onclick="saveTransaction()">Simpan Transaksi</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="noteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="noteModalTitle">Catatan Baru</span>
+                <button class="modal-close" onclick="closeModal('noteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Judul</label>
+                    <input type="text" class="form-input" id="noteTitle" placeholder="Judul catatan">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipe</label>
+                    <select class="form-select" id="noteType">
+                        <option value="quick">Quick Note</option>
+                        <option value="checklist">Checklist</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Isi</label>
+                    <textarea class="form-textarea" id="noteContent" placeholder="Untuk checklist, pisahkan dengan enter"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width:100%" onclick="saveNote()">Simpan Catatan</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+
+// ==================== DATABASE (IndexedDB) ====================
+const DB_NAME = 'SmartTaskDB';
+const DB_VERSION = 1;
+let db;
+
+const initDB = () => {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { db = request.result; resolve(db); };
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('habits')) db.createObjectStore('habits', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('goals')) db.createObjectStore('goals', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('finance')) db.createObjectStore('finance', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('pomodoro')) db.createObjectStore('pomodoro', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+        };
+    });
+};
+
+const dbPut = (store, data) => {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const request = tx.objectStore(store).put(data);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};
+
+const dbGetAll = (store) => {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const request = tx.objectStore(store).getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};
+
+const dbDelete = (store, id) => {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const request = tx.objectStore(store).delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+    });
+};
+
+const dbGet = (store, id) => {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const request = tx.objectStore(store).get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};
+
+// ==================== STATE ====================
+let currentPage = 'dashboard';
+let currentTaskFilter = 'all';
+let currentGoalFilter = 'all';
+let currentNoteFilter = 'all';
+let editingTaskId = null;
+let editingHabitId = null;
+let editingGoalId = null;
+let editingNoteId = null;
+let currentCalendarDate = new Date();
+let pomodoroTimer = null;
+let pomodoroTime = 25 * 60;
+let pomodoroRunning = false;
+let pomodoroMode = 'focus';
+let pomodoroSessions = 0;
+let deferredPrompt = null;
+
+// ==================== NAVIGATION ====================
+const navigateTo = (page) => {
+    currentPage = page;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(page).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    window.scrollTo(0, 0);
+    renderPage(page);
+};
+
+const toggleSidebar = () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+};
+
+const renderPage = (page) => {
+    if (page === 'dashboard') renderDashboard();
+    if (page === 'tasks') renderTasks();
+    if (page === 'habits') renderHabits();
+    if (page === 'calendar') renderCalendar();
+    if (page === 'pomodoro') renderPomodoro();
+    if (page === 'goals') renderGoals();
+    if (page === 'finance') renderFinance();
+    if (page === 'notes') renderNotes();
+    if (page === 'analytics') renderAnalytics();
+    if (page === 'review') renderReview();
+};
+
+// ==================== DASHBOARD ====================
+const renderDashboard = async () => {
+    const tasks = await dbGetAll('tasks');
+    const habits = await dbGetAll('habits');
+    const goals = await dbGetAll('goals');
+    const pomodoroData = await dbGetAll('pomodoro');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const todayTasks = tasks.filter(t => {
+        if (!t.deadline) return false;
+        const d = new Date(t.deadline);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime() && t.status !== 'completed';
+    });
+
+    const completedTasks = tasks.filter(t => t.status === 'completed');
+    const pendingTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'archived');
+
+    const upcomingDeadlines = tasks
+        .filter(t => t.deadline && t.status !== 'completed' && t.status !== 'archived')
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+    const nearestDeadline = upcomingDeadlines[0];
+    let deadlineText = '-';
+    let deadlineDays = '-';
+    if (nearestDeadline) {
+        const d = new Date(nearestDeadline.deadline);
+        const daysDiff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+        deadlineText = nearestDeadline.title;
+        deadlineDays = daysDiff === 0 ? 'Hari ini!' : daysDiff === 1 ? 'Besok' : `${daysDiff} hari lagi`;
+    }
+
+    document.getElementById('dash-today-tasks').textContent = todayTasks.length;
+    document.getElementById('dash-completed').textContent = completedTasks.length;
+    document.getElementById('dash-pending').textContent = pendingTasks.length;
+    document.getElementById('dash-deadline').textContent = deadlineText.length > 20 ? deadlineText.substring(0, 20) + '...' : deadlineText;
+    document.getElementById('dash-deadline-days').textContent = deadlineDays;
+
+    const score = calculateProductivityScore(tasks, habits, pomodoroData, goals);
+    document.getElementById('dash-score-value').textContent = score;
+    const ring = document.getElementById('dash-score-ring');
+    const circumference = 2 * Math.PI * 60;
+    const offset = circumference - (score / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
+
+    const badge = document.getElementById('dash-score-badge');
+    const label = document.getElementById('dash-score-label');
+    if (score <= 40) { badge.className = 'score-badge score-low'; badge.textContent = 'Rendah'; label.textContent = 'Yuk mulai produktif!'; }
+    else if (score <= 70) { badge.className = 'score-badge score-medium'; badge.textContent = 'Sedang'; label.textContent = 'Lumayan, tingkatkan lagi!'; }
+    else if (score <= 85) { badge.className = 'score-badge score-good'; badge.textContent = 'Baik'; label.textContent = 'Produktif! Pertahankan!'; }
+    else { badge.className = 'score-badge score-excellent'; badge.textContent = 'Sangat Produktif'; label.textContent = 'Luar biasa! Anda top!'; }
+
+    const habitsList = document.getElementById('dash-habits-list');
+    if (habits.length === 0) {
+        habitsList.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔥</div><div class="empty-state-title">Belum ada habit</div><p>Tambah habit untuk mulai tracking</p></div>`;
+    } else {
+        habitsList.innerHTML = habits.slice(0, 4).map(h => {
+            const isDone = h.checks && h.checks[todayStr];
+            return `<div class="habit-item"><div class="habit-icon">${h.icon || '🔥'}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-streak">🔥 ${h.streak || 0} hari streak</div></div><div class="habit-check ${isDone ? 'checked' : ''}" onclick="toggleHabit(${h.id}, event)">${isDone ? '✓' : ''}</div></div>`;
+        }).join('');
+    }
+
+    const urgentTasks = upcomingDeadlines.slice(0, 5);
+    const urgentContainer = document.getElementById('dash-urgent-tasks');
+    if (urgentTasks.length === 0) {
+        urgentContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎉</div><p>Tidak ada tugas mendesak</p></div>`;
+    } else {
+        urgentContainer.innerHTML = urgentTasks.map(t => renderTaskItem(t)).join('');
+    }
+
+    document.getElementById('nav-badge-tasks').textContent = pendingTasks.length > 0 ? pendingTasks.length : '';
+    document.getElementById('nav-badge-tasks').style.display = pendingTasks.length > 0 ? 'block' : 'none';
+
+    const uncheckedHabits = habits.filter(h => !h.checks || !h.checks[todayStr]).length;
+    document.getElementById('nav-badge-habits').textContent = uncheckedHabits > 0 ? uncheckedHabits : '';
+    document.getElementById('nav-badge-habits').style.display = uncheckedHabits > 0 ? 'block' : 'none';
+};
+
+const calculateProductivityScore = (tasks, habits, pomodoroData, goals) => {
+    let score = 0;
+    const totalTasks = tasks.filter(t => t.status !== 'archived').length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    if (totalTasks > 0) score += (completedTasks / totalTasks) * 30;
+
+    const today = new Date().toISOString().split('T')[0];
+    const totalHabits = habits.length;
+    const checkedHabits = habits.filter(h => h.checks && h.checks[today]).length;
+    if (totalHabits > 0) score += (checkedHabits / totalHabits) * 25;
+
+    const totalFocusMinutes = pomodoroData.reduce((sum, p) => sum + (p.duration || 0), 0);
+    const focusHours = totalFocusMinutes / 60;
+    score += Math.min(focusHours / 10, 1) * 25;
+
+    const totalGoals = goals.length;
+    const achievedGoals = goals.filter(g => g.current >= g.target).length;
+    if (totalGoals > 0) score += (achievedGoals / totalGoals) * 20;
+
+    return Math.round(score);
+};
+
+// ==================== TASKS ====================
+const renderTasks = async () => {
+    const tasks = await dbGetAll('tasks');
+    const container = document.getElementById('tasks-list');
+
+    let filtered = tasks.filter(t => t.status !== 'archived');
+
+    if (currentTaskFilter === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        filtered = filtered.filter(t => t.deadline && t.deadline.startsWith(today));
+    } else if (currentTaskFilter === 'upcoming') {
+        filtered = filtered.filter(t => t.status !== 'completed');
+    } else if (currentTaskFilter === 'completed') {
+        filtered = tasks.filter(t => t.status === 'completed');
+    } else if (currentTaskFilter === 'archived') {
+        filtered = tasks.filter(t => t.status === 'archived');
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-title">Tidak ada tugas</div><p>${currentTaskFilter === 'all' ? 'Tambah tugas pertama Anda' : 'Tidak ada tugas dalam kategori ini'}</p></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.sort((a, b) => {
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        if (a.deadline && b.deadline) return new Date(a.deadline) - new Date(b.deadline);
+        return 0;
+    }).map(t => renderTaskItem(t)).join('');
+};
+
+const renderTaskItem = (task) => {
+    const isCompleted = task.status === 'completed';
+    const priorityClass = `priority-${task.priority || 'medium'}`;
+    const priorityText = { low: 'Rendah', medium: 'Sedang', high: 'Tinggi', critical: 'Kritis' }[task.priority] || 'Sedang';
+    const statusText = { not_started: 'Belum Dimulai', in_progress: 'Sedang Dikerjakan', completed: 'Selesai', postponed: 'Ditunda', archived: 'Diarsipkan' }[task.status] || 'Belum Dimulai';
+
+    let deadlineText = '-';
+    if (task.deadline) {
+        const d = new Date(task.deadline);
+        const now = new Date();
+        const daysDiff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+        deadlineText = daysDiff < 0 ? 'Lewat deadline' : daysDiff === 0 ? 'Hari ini' : daysDiff === 1 ? 'Besok' : `${daysDiff} hari lagi`;
+    }
+
+    return `<div class="task-item ${isCompleted ? 'completed' : ''}" data-id="${task.id}">
+        <div class="task-checkbox ${isCompleted ? 'checked' : ''}" onclick="toggleTaskComplete(${task.id}, event)">${isCompleted ? '✓' : ''}</div>
+        <div class="task-content">
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+                <span class="priority-badge ${priorityClass}">${priorityText}</span>
+                <span>📁 ${task.category || 'Lainnya'}</span>
+                <span>📅 ${deadlineText}</span>
+                <span>📊 ${statusText}</span>
+            </div>
+        </div>
+        <div class="task-actions">
+            <button onclick="editTask(${task.id}, event)" title="Edit">✏️</button>
+            <button onclick="archiveTask(${task.id}, event)" title="Arsipkan">📦</button>
+            <button onclick="deleteTask(${task.id}, event)" title="Hapus">🗑️</button>
+        </div>
+    </div>`;
+};
+
+const filterTasks = (filter) => {
+    currentTaskFilter = filter;
+    document.querySelectorAll('#tasks .filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderTasks();
+};
+
+const openTaskModal = (editId = null) => {
+    editingTaskId = editId;
+    document.getElementById('taskModalTitle').textContent = editId ? 'Edit Tugas' : 'Tambah Tugas';
+    if (editId) {
+        dbGet('tasks', editId).then(task => {
+            document.getElementById('taskTitle').value = task.title || '';
+            document.getElementById('taskDesc').value = task.description || '';
+            document.getElementById('taskCategory').value = task.category || 'Pekerjaan';
+            document.getElementById('taskPriority').value = task.priority || 'medium';
+            document.getElementById('taskDeadline').value = task.deadline ? task.deadline.slice(0, 16) : '';
+            document.getElementById('taskStatus').value = task.status || 'not_started';
+        });
+    } else {
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDesc').value = '';
+        document.getElementById('taskCategory').value = 'Pekerjaan';
+        document.getElementById('taskPriority').value = 'medium';
+        document.getElementById('taskDeadline').value = '';
+        document.getElementById('taskStatus').value = 'not_started';
+    }
+    document.getElementById('taskModal').classList.add('active');
+};
+
+const saveTask = async () => {
+    const title = document.getElementById('taskTitle').value.trim();
+    if (!title) { showToast('Judul tugas wajib diisi', 'error'); return; }
+
+    const task = {
+        title,
+        description: document.getElementById('taskDesc').value.trim(),
+        category: document.getElementById('taskCategory').value,
+        priority: document.getElementById('taskPriority').value,
+        deadline: document.getElementById('taskDeadline').value ? new Date(document.getElementById('taskDeadline').value).toISOString() : null,
+        status: document.getElementById('taskStatus').value,
+        createdAt: new Date().toISOString()
+    };
+
+    if (editingTaskId) {
+        task.id = editingTaskId;
+        const existing = await dbGet('tasks', editingTaskId);
+        task.createdAt = existing.createdAt;
+    }
+
+    await dbPut('tasks', task);
+    closeModal('taskModal');
+    showToast(editingTaskId ? 'Tugas diperbarui' : 'Tugas ditambahkan', 'success');
+    renderTasks();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const toggleTaskComplete = async (id, event) => {
+    event.stopPropagation();
+    const task = await dbGet('tasks', id);
+    task.status = task.status === 'completed' ? 'not_started' : 'completed';
+    await dbPut('tasks', task);
+    renderTasks();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const editTask = (id, event) => {
+    event.stopPropagation();
+    openTaskModal(id);
+};
+
+const archiveTask = async (id, event) => {
+    event.stopPropagation();
+    const task = await dbGet('tasks', id);
+    task.status = 'archived';
+    await dbPut('tasks', task);
+    showToast('Tugas diarsipkan', 'info');
+    renderTasks();
+};
+
+const deleteTask = async (id, event) => {
+    event.stopPropagation();
+    if (!confirm('Yakin ingin menghapus tugas ini?')) return;
+    await dbDelete('tasks', id);
+    showToast('Tugas dihapus', 'success');
+    renderTasks();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+// ==================== HABITS ====================
+const renderHabits = async () => {
+    const habits = await dbGetAll('habits');
+    const container = document.getElementById('habits-list');
+    const today = new Date().toISOString().split('T')[0];
+
+    if (habits.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔥</div><div class="empty-state-title">Belum ada habit</div><p>Tambah habit untuk mulai tracking harian</p></div>`;
+        return;
+    }
+
+    container.innerHTML = habits.map(h => {
+        const isDone = h.checks && h.checks[today];
+        const streak = h.streak || 0;
+        return `<div class="habit-item">
+            <div class="habit-icon">${h.icon || '🔥'}</div>
+            <div class="habit-info">
+                <div class="habit-name">${h.name}</div>
+                <div class="habit-streak">🔥 ${streak} hari streak &bull; Target: ${h.target || '1x'}</div>
+            </div>
+            <div class="habit-check ${isDone ? 'checked' : ''}" onclick="toggleHabit(${h.id})">${isDone ? '✓' : ''}</div>
+            <div class="task-actions" style="opacity:1">
+                <button onclick="deleteHabit(${h.id}, event)" title="Hapus">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+};
+
+const toggleHabit = async (id, event) => {
+    if (event) event.stopPropagation();
+    const habit = await dbGet('habits', id);
+    const today = new Date().toISOString().split('T')[0];
+    if (!habit.checks) habit.checks = {};
+
+    if (habit.checks[today]) {
+        delete habit.checks[today];
+        habit.streak = Math.max(0, (habit.streak || 0) - 1);
+    } else {
+        habit.checks[today] = true;
+        habit.streak = (habit.streak || 0) + 1;
+    }
+
+    await dbPut('habits', habit);
+    renderHabits();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const openHabitModal = (editId = null) => {
+    editingHabitId = editId;
+    document.getElementById('habitModalTitle').textContent = editId ? 'Edit Habit' : 'Tambah Habit';
+    document.getElementById('habitName').value = '';
+    document.getElementById('habitIcon').value = '📚';
+    document.getElementById('habitTarget').value = '';
+    document.getElementById('habitModal').classList.add('active');
+};
+
+const saveHabit = async () => {
+    const name = document.getElementById('habitName').value.trim();
+    if (!name) { showToast('Nama habit wajib diisi', 'error'); return; }
+
+    const habit = {
+        name,
+        icon: document.getElementById('habitIcon').value,
+        target: document.getElementById('habitTarget').value.trim() || '1x',
+        checks: {},
+        streak: 0,
+        createdAt: new Date().toISOString()
+    };
+
+    if (editingHabitId) {
+        habit.id = editingHabitId;
+        const existing = await dbGet('habits', editingHabitId);
+        habit.checks = existing.checks || {};
+        habit.streak = existing.streak || 0;
+    }
+
+    await dbPut('habits', habit);
+    closeModal('habitModal');
+    showToast('Habit ditambahkan', 'success');
+    renderHabits();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const deleteHabit = async (id, event) => {
+    event.stopPropagation();
+    if (!confirm('Yakin ingin menghapus habit ini?')) return;
+    await dbDelete('habits', id);
+    showToast('Habit dihapus', 'success');
+    renderHabits();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+// ==================== CALENDAR ====================
+const renderCalendar = async () => {
+    const tasks = await dbGetAll('tasks');
+    const habits = await dbGetAll('habits');
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
+    document.getElementById('calendar-subtitle').textContent = `Kalender ${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+
+    const dayHeaders = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    dayHeaders.forEach(d => {
+        grid.innerHTML += `<div class="calendar-day-header">${d}</div>`;
+    });
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+        grid.innerHTML += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
+    }
+
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+
+        const hasTask = tasks.some(t => t.deadline && t.deadline.startsWith(dateStr) && t.status !== 'completed');
+        const hasHabit = habits.some(h => h.checks && h.checks[dateStr]);
+        const hasEvent = hasTask || hasHabit;
+
+        grid.innerHTML += `<div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-events' : ''}" onclick="showDayAgenda('${dateStr}')">${day}</div>`;
+    }
+
+    const remainingCells = 42 - (firstDay + daysInMonth);
+    for (let day = 1; day <= remainingCells; day++) {
+        grid.innerHTML += `<div class="calendar-day other-month">${day}</div>`;
+    }
+
+    showDayAgenda(new Date().toISOString().split('T')[0]);
+};
+
+const changeMonth = (delta) => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
+};
+
+const showDayAgenda = async (dateStr) => {
+    const tasks = await dbGetAll('tasks');
+    const habits = await dbGetAll('habits');
+    const container = document.getElementById('calendar-agenda');
+
+    const dayTasks = tasks.filter(t => t.deadline && t.deadline.startsWith(dateStr));
+    const dayHabits = habits.filter(h => h.checks && h.checks[dateStr]);
+
+    if (dayTasks.length === 0 && dayHabits.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><p>Tidak ada agenda untuk tanggal ini</p></div>`;
+        return;
+    }
+
+    let html = '';
+    if (dayTasks.length > 0) {
+        html += `<div style="margin-bottom:16px"><strong style="font-size:14px;color:var(--text-muted)">📝 Tugas</strong></div>`;
+        html += dayTasks.map(t => `<div class="task-item" style="margin-bottom:8px;padding:12px"><div class="task-content"><div class="task-title">${t.title}</div><div class="task-meta"><span class="priority-badge priority-${t.priority || 'medium'}">${t.priority || 'medium'}</span></div></div></div>`).join('');
+    }
+    if (dayHabits.length > 0) {
+        html += `<div style="margin:16px 0 12px"><strong style="font-size:14px;color:var(--text-muted)">🔥 Habits Selesai</strong></div>`;
+        html += dayHabits.map(h => `<div class="habit-item" style="margin-bottom:8px;padding:12px"><div class="habit-icon">${h.icon || '🔥'}</div><div class="habit-info"><div class="habit-name">${h.name}</div></div></div>`).join('');
+    }
+    container.innerHTML = html;
+};
+
+// ==================== POMODORO ====================
+const renderPomodoro = async () => {
+    const data = await dbGetAll('pomodoro');
+    const today = new Date().toISOString().split('T')[0];
+
+    const totalSessions = data.length;
+    const totalMinutes = data.reduce((sum, d) => sum + (d.duration || 0), 0);
+    const todaySessions = data.filter(d => d.date === today).length;
+
+    document.getElementById('pomo-sessions').textContent = totalSessions;
+    document.getElementById('pomo-hours').textContent = (totalMinutes / 60).toFixed(1);
+    document.getElementById('pomo-today').textContent = todaySessions;
+};
+
+const setPomodoroMode = (mode) => {
+    pomodoroMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const times = { focus: 25, short: 5, long: 15 };
+    pomodoroTime = times[mode] * 60;
+    updateTimerDisplay();
+    resetTimer();
+};
+
+const updateTimerDisplay = () => {
+    const minutes = Math.floor(pomodoroTime / 60);
+    const seconds = pomodoroTime % 60;
+    document.getElementById('timer-display').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+const startTimer = () => {
+    if (pomodoroRunning) return;
+    pomodoroRunning = true;
+    document.getElementById('timer-start').textContent = '⏹ Stop';
+    document.getElementById('timer-start').onclick = stopTimer;
+
+    pomodoroTimer = setInterval(() => {
+        pomodoroTime--;
+        updateTimerDisplay();
+        if (pomodoroTime <= 0) {
+            stopTimer();
+            completePomodoro();
+        }
+    }, 1000);
+};
+
+const pauseTimer = () => {
+    if (!pomodoroRunning) return;
+    clearInterval(pomodoroTimer);
+    pomodoroRunning = false;
+    document.getElementById('timer-start').textContent = '▶ Lanjut';
+    document.getElementById('timer-start').onclick = startTimer;
+};
+
+const stopTimer = () => {
+    clearInterval(pomodoroTimer);
+    pomodoroRunning = false;
+    document.getElementById('timer-start').textContent = '▶ Mulai';
+    document.getElementById('timer-start').onclick = startTimer;
+};
+
+const resetTimer = () => {
+    stopTimer();
+    const times = { focus: 25, short: 5, long: 15 };
+    pomodoroTime = times[pomodoroMode] * 60;
+    updateTimerDisplay();
+};
+
+const completePomodoro = async () => {
+    const times = { focus: 25, short: 5, long: 15 };
+    const session = {
+        mode: pomodoroMode,
+        duration: times[pomodoroMode],
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString()
+    };
+    await dbPut('pomodoro', session);
+
+    if (pomodoroMode === 'focus') {
+        showToast('Sesi fokus selesai! Istirahat dulu ya.', 'success');
+        setPomodoroMode('short');
+        document.querySelectorAll('.mode-btn')[1].classList.add('active');
+    } else {
+        showToast('Istirahat selesai! Siap fokus lagi?', 'info');
+        setPomodoroMode('focus');
+        document.querySelectorAll('.mode-btn')[0].classList.add('active');
+    }
+
+    renderPomodoro();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+// ==================== GOALS ====================
+const renderGoals = async () => {
+    const goals = await dbGetAll('goals');
+    const container = document.getElementById('goals-list');
+
+    let filtered = goals;
+    if (currentGoalFilter !== 'all') {
+        filtered = goals.filter(g => g.period === currentGoalFilter);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-title">Belum ada target</div><p>Tambah target untuk memantau progress</p></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(g => {
+        const progress = g.target > 0 ? Math.min((g.current || 0) / g.target * 100, 100) : 0;
+        const periodText = { daily: 'Harian', weekly: 'Mingguan', monthly: 'Bulanan', yearly: 'Tahunan' }[g.period] || 'Harian';
+        return `<div class="goal-item">
+            <div class="goal-header">
+                <span class="goal-title">${g.name}</span>
+                <span class="goal-period">${periodText}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+            <div class="goal-stats">
+                <span>${g.current || 0} / ${g.target} ${g.unit || ''}</span>
+                <span>${progress.toFixed(0)}%</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="btn btn-sm btn-primary" onclick="updateGoalProgress(${g.id}, 1)">+1</button>
+                <button class="btn btn-sm btn-outline" onclick="updateGoalProgress(${g.id}, -1)">-1</button>
+                <button class="btn btn-sm btn-outline" style="margin-left:auto" onclick="deleteGoal(${g.id})">Hapus</button>
+            </div>
+        </div>`;
+    }).join('');
+};
+
+const filterGoals = (filter) => {
+    currentGoalFilter = filter;
+    document.querySelectorAll('#goals .filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderGoals();
+};
+
+const openGoalModal = () => {
+    document.getElementById('goalName').value = '';
+    document.getElementById('goalPeriod').value = 'weekly';
+    document.getElementById('goalTarget').value = '';
+    document.getElementById('goalUnit').value = '';
+    document.getElementById('goalModal').classList.add('active');
+};
+
+const saveGoal = async () => {
+    const name = document.getElementById('goalName').value.trim();
+    if (!name) { showToast('Nama target wajib diisi', 'error'); return; }
+
+    const goal = {
+        name,
+        period: document.getElementById('goalPeriod').value,
+        target: parseInt(document.getElementById('goalTarget').value) || 1,
+        unit: document.getElementById('goalUnit').value.trim() || '',
+        current: 0,
+        createdAt: new Date().toISOString()
+    };
+
+    await dbPut('goals', goal);
+    closeModal('goalModal');
+    showToast('Target ditambahkan', 'success');
+    renderGoals();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const updateGoalProgress = async (id, delta) => {
+    const goal = await dbGet('goals', id);
+    goal.current = Math.max(0, (goal.current || 0) + delta);
+    await dbPut('goals', goal);
+    renderGoals();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+const deleteGoal = async (id) => {
+    if (!confirm('Yakin ingin menghapus target ini?')) return;
+    await dbDelete('goals', id);
+    showToast('Target dihapus', 'success');
+    renderGoals();
+    if (currentPage === 'dashboard') renderDashboard();
+};
+
+// ==================== FINANCE ====================
+const renderFinance = async () => {
+    const transactions = await dbGetAll('finance');
+
+    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
+    const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
+    const balance = income - expense;
+
+    document.getElementById('finance-income').textContent = formatRupiah(income);
+    document.getElementById('finance-expense').textContent = formatRupiah(expense);
+    document.getElementById('finance-balance').textContent = formatRupiah(balance);
+
+    const container = document.getElementById('finance-transactions');
+    if (transactions.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💰</div><p>Belum ada transaksi</p></div>`;
+    } else {
+        container.innerHTML = transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20).map(t => {
+            const icons = { Makanan: '🍽️', Transportasi: '🚗', Pendidikan: '📚', Hiburan: '🎮', Kesehatan: '💊', Belanja: '🛒', Tabungan: '💰', Gaji: '💵', Lainnya: '📦' };
+            return `<div class="transaction-item">
+                <div class="transaction-icon" style="background:${t.type === 'income' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'}">${icons[t.category] || '📦'}</div>
+                <div class="transaction-info">
+                    <div class="transaction-title">${t.note || t.category}</div>
+                    <div class="transaction-category">${t.category} &bull; ${new Date(t.date).toLocaleDateString('id-ID')}</div>
+                </div>
+                <div class="transaction-amount ${t.type}">${t.type === 'income' ? '+' : '-'} ${formatRupiah(t.amount)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    const expenseByCategory = {};
+    transactions.filter(t => t.type === 'expense').forEach(t => {
+        expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+    });
+
+    const chartContainer = document.getElementById('finance-chart');
+    if (Object.keys(expenseByCategory).length === 0) {
+        chartContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📊</div><p>Belum ada data pengeluaran</p></div>`;
+    } else {
+        const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
+        const total = Object.values(expenseByCategory).reduce((a, b) => a + b, 0);
+        let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+        Object.entries(expenseByCategory).forEach(([cat, amount], i) => {
+            const pct = (amount / total * 100).toFixed(1);
+            html += `<div style="display:flex;align-items:center;gap:12px">
+                <div style="width:12px;height:12px;border-radius:3px;background:${colors[i % colors.length]}"></div>
+                <div style="flex:1"><div style="font-size:14px;font-weight:500">${cat}</div><div style="font-size:12px;color:var(--text-muted)">${pct}%</div></div>
+                <div style="font-weight:600">${formatRupiah(amount)}</div>
+            </div>
+            <div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${pct}%;background:${colors[i % colors.length]}"></div></div>`;
+        });
+        html += '</div>';
+        chartContainer.innerHTML = html;
+    }
+};
+
+const formatRupiah = (num) => {
+    return 'Rp' + num.toLocaleString('id-ID');
+};
+
+const openFinanceModal = () => {
+    document.getElementById('financeType').value = 'expense';
+    document.getElementById('financeAmount').value = '';
+    document.getElementById('financeCategory').value = 'Makanan';
+    document.getElementById('financeNote').value = '';
+    document.getElementById('financeModal').classList.add('active');
+};
+
+const saveTransaction = async () => {
+    const amount = parseInt(document.getElementById('financeAmount').value);
+    if (!amount || amount <= 0) { showToast('Jumlah wajib diisi', 'error'); return; }
+
+    const transaction = {
+        type: document.getElementById('financeType').value,
+        amount,
+        category: document.getElementById('financeCategory').value,
+        note: document.getElementById('financeNote').value.trim(),
+        date: new Date().toISOString()
+    };
+
+    await dbPut('finance', transaction);
+    closeModal('financeModal');
+    showToast('Transaksi disimpan', 'success');
+    renderFinance();
+};
+
+// ==================== NOTES ====================
+const renderNotes = async () => {
+    const notes = await dbGetAll('notes');
+    const container = document.getElementById('notes-list');
+
+    let filtered = notes;
+    if (currentNoteFilter !== 'all') {
+        filtered = notes.filter(n => n.type === currentNoteFilter);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📒</div><div class="empty-state-title">Belum ada catatan</div><p>Simpan ide dan catatan penting Anda</p></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)).map(n => {
+        const isChecklist = n.type === 'checklist';
+        let content = '';
+        if (isChecklist && n.checklist) {
+            content = n.checklist.slice(0, 3).map(c => `<div class="checklist-item" style="padding:4px 0;border:none"><div class="checklist-check ${c.checked ? 'checked' : ''}"></div><span class="checklist-text ${c.checked ? 'checked' : ''}">${c.text}</span></div>`).join('');
+            if (n.checklist.length > 3) content += `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">+${n.checklist.length - 3} item lainnya</div>`;
+        } else {
+            content = `<div class="note-preview">${n.content ? n.content.substring(0, 100) + (n.content.length > 100 ? '...' : '') : ''}</div>`;
+        }
+
+        return `<div class="note-item" onclick="editNote(${n.id})">
+            <div class="note-title">${n.title} ${isChecklist ? '📋' : '📝'}</div>
+            ${content}
+            <div class="note-date">${new Date(n.updatedAt || n.createdAt).toLocaleDateString('id-ID')}</div>
+        </div>`;
+    }).join('');
+};
+
+const filterNotes = (filter) => {
+    currentNoteFilter = filter;
+    document.querySelectorAll('#notes .filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderNotes();
+};
+
+const openNoteModal = () => {
+    editingNoteId = null;
+    document.getElementById('noteModalTitle').textContent = 'Catatan Baru';
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteType').value = 'quick';
+    document.getElementById('noteContent').value = '';
+    document.getElementById('noteModal').classList.add('active');
+};
+
+const editNote = async (id) => {
+    editingNoteId = id;
+    const note = await dbGet('notes', id);
+    document.getElementById('noteModalTitle').textContent = 'Edit Catatan';
+    document.getElementById('noteTitle').value = note.title || '';
+    document.getElementById('noteType').value = note.type || 'quick';
+    if (note.type === 'checklist' && note.checklist) {
+        document.getElementById('noteContent').value = note.checklist.map(c => c.text).join('\n');
+    } else {
+        document.getElementById('noteContent').value = note.content || '';
+    }
+    document.getElementById('noteModal').classList.add('active');
+};
+
+const saveNote = async () => {
+    const title = document.getElementById('noteTitle').value.trim();
+    if (!title) { showToast('Judul catatan wajib diisi', 'error'); return; }
+
+    const type = document.getElementById('noteType').value;
+    const content = document.getElementById('noteContent').value.trim();
+
+    const note = {
+        title,
+        type,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    if (type === 'checklist') {
+        note.checklist = content.split('\n').filter(l => l.trim()).map(text => ({ text: text.trim(), checked: false }));
+    } else {
+        note.content = content;
+    }
+
+    if (editingNoteId) {
+        note.id = editingNoteId;
+        const existing = await dbGet('notes', editingNoteId);
+        note.createdAt = existing.createdAt;
+    }
+
+    await dbPut('notes', note);
+    closeModal('noteModal');
+    showToast('Catatan disimpan', 'success');
+    renderNotes();
+};
+
+// ==================== ANALYTICS ====================
+const renderAnalytics = async () => {
+    const tasks = await dbGetAll('tasks');
+    const habits = await dbGetAll('habits');
+    const pomodoroData = await dbGetAll('pomodoro');
+
+    const categoryCount = {};
+    tasks.forEach(t => { categoryCount[t.category || 'Lainnya'] = (categoryCount[t.category || 'Lainnya'] || 0) + 1; });
+
+    const catContainer = document.getElementById('chart-tasks-category');
+    if (Object.keys(categoryCount).length === 0) {
+        catContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📊</div><p>Belum ada data</p></div>`;
+    } else {
+        const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
+        const total = Object.values(categoryCount).reduce((a, b) => a + b, 0);
+        let html = '<div style="display:flex;flex-direction:column;gap:12px">';
+        Object.entries(categoryCount).forEach(([cat, count], i) => {
+            const pct = (count / total * 100).toFixed(1);
+            html += `<div style="display:flex;align-items:center;gap:12px"><div style="width:12px;height:12px;border-radius:3px;background:${colors[i % colors.length]}"></div><div style="flex:1"><div style="font-size:14px;font-weight:500">${cat}</div></div><div style="font-weight:600">${count} (${pct}%)</div></div><div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${pct}%;background:${colors[i % colors.length]}"></div></div>`;
+        });
+        html += '</div>';
+        catContainer.innerHTML = html;
+    }
+
+    const prodContainer = document.getElementById('chart-productivity');
+    const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const today = new Date();
+    const weekData = days.map((_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (6 - i));
+        const dateStr = d.toISOString().split('T')[0];
+        const dayTasks = tasks.filter(t => t.status === 'completed' && t.updatedAt && t.updatedAt.startsWith(dateStr)).length;
+        const dayPomo = pomodoroData.filter(p => p.date === dateStr).length;
+        return dayTasks + dayPomo;
+    });
+    const maxVal = Math.max(...weekData, 1);
+
+    let barHtml = '<div class="bar-chart">';
+    weekData.forEach((val, i) => {
+        const height = (val / maxVal * 100);
+        barHtml += `<div class="bar" style="height:${height}%"><div class="bar-value">${val}</div><div class="bar-label">${days[i]}</div></div>`;
+    });
+    barHtml += '</div>';
+    prodContainer.innerHTML = barHtml;
+
+    const habitsWithRate = habits.map(h => {
+        const checks = Object.keys(h.checks || {}).length;
+        const daysSince = Math.max(1, Math.ceil((new Date() - new Date(h.createdAt)) / (1000 * 60 * 60 * 24)));
+        return { ...h, rate: checks / daysSince };
+    }).sort((a, b) => b.rate - a.rate);
+
+    document.getElementById('analytics-best-habits').innerHTML = habitsWithRate.slice(0, 3).map(h => 
+        `<div class="habit-item" style="margin-bottom:8px;padding:12px"><div class="habit-icon">${h.icon || '🔥'}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-streak">Rate: ${(h.rate * 100).toFixed(0)}%</div></div></div>`
+    ).join('') || '<div class="empty-state" style="padding:20px"><p>Belum ada data</p></div>';
+
+    document.getElementById('analytics-worst-habits').innerHTML = habitsWithRate.slice(-3).reverse().map(h => 
+        `<div class="habit-item" style="margin-bottom:8px;padding:12px"><div class="habit-icon">${h.icon || '🔥'}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-streak">Rate: ${(h.rate * 100).toFixed(0)}%</div></div></div>`
+    ).join('') || '<div class="empty-state" style="padding:20px"><p>Belum ada data</p></div>';
+
+    const postponedTasks = tasks.filter(t => t.status === 'postponed').length;
+    const insights = [];
+    if (postponedTasks > 0) insights.push(`⚠️ Anda memiliki ${postponedTasks} tugas yang ditunda. Sebaiknya segera ditangani.`);
+    if (habits.length > 0) {
+        const best = habitsWithRate[0];
+        if (best) insights.push(`🏆 Habit terbaik: ${best.name} dengan rate ${(best.rate * 100).toFixed(0)}%`);
+    }
+    const totalFocus = pomodoroData.reduce((s, p) => s + (p.duration || 0), 0);
+    if (totalFocus > 0) insights.push(`⏱️ Total jam fokus: ${(totalFocus / 60).toFixed(1)} jam`);
+
+    document.getElementById('analytics-insights').innerHTML = insights.length > 0 
+        ? insights.map(i => `<div style="padding:12px 0;border-bottom:1px solid var(--border);font-size:14px">${i}</div>`).join('')
+        : '<div class="empty-state" style="padding:20px"><p>Belum cukup data untuk insight</p></div>';
+};
+
+// ==================== REVIEW ====================
+const renderReview = async () => {
+    const tasks = await dbGetAll('tasks');
+    const habits = await dbGetAll('habits');
+    const pomodoroData = await dbGetAll('pomodoro');
+
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekTasks = tasks.filter(t => new Date(t.createdAt) >= weekStart);
+    const weekCompleted = weekTasks.filter(t => t.status === 'completed').length;
+    const weekPending = weekTasks.filter(t => t.status !== 'completed' && t.status !== 'archived').length;
+
+    const weekHabitsChecked = habits.reduce((sum, h) => {
+        const weekChecks = Object.keys(h.checks || {}).filter(d => new Date(d) >= weekStart).length;
+        return sum + weekChecks;
+    }, 0);
+
+    const weekPomo = pomodoroData.filter(p => new Date(p.date) >= weekStart).reduce((s, p) => s + (p.duration || 0), 0);
+
+    const score = calculateProductivityScore(tasks, habits, pomodoroData, await dbGetAll('goals'));
+
+    document.getElementById('review-score').textContent = score;
+    document.getElementById('review-score').className = `score-badge ${score <= 40 ? 'score-low' : score <= 70 ? 'score-medium' : score <= 85 ? 'score-good' : 'score-excellent'}`;
+
+    document.getElementById('weekly-stats').innerHTML = `
+        <div class="review-card"><div class="review-value">${weekCompleted}</div><div class="review-label">Tugas Selesai</div></div>
+        <div class="review-card"><div class="review-value">${weekPending}</div><div class="review-label">Tugas Tertunda</div></div>
+        <div class="review-card"><div class="review-value">${weekHabitsChecked}</div><div class="review-label">Habit Check</div></div>
+        <div class="review-card"><div class="review-value">${(weekPomo / 60).toFixed(1)}</div><div class="review-label">Jam Fokus</div></div>
+    `;
+
+    const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const weekData = days.map((_, i) => {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayTasks = tasks.filter(t => t.status === 'completed' && t.updatedAt && t.updatedAt.startsWith(dateStr)).length;
+        return dayTasks;
+    });
+    const maxVal = Math.max(...weekData, 1);
+
+    let barHtml = '<div class="bar-chart">';
+    weekData.forEach((val, i) => {
+        const height = (val / maxVal * 100);
+        barHtml += `<div class="bar" style="height:${height || 4}%"><div class="bar-value">${val}</div><div class="bar-label">${days[i]}</div></div>`;
+    });
+    barHtml += '</div>';
+    document.getElementById('review-chart').innerHTML = barHtml;
+};
+
+const showReview = (type) => {
+    document.querySelectorAll('#review .filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderReview();
+};
+
+// ==================== BACKUP & RESTORE ====================
+const exportData = async () => {
+    const data = {
+        tasks: await dbGetAll('tasks'),
+        habits: await dbGetAll('habits'),
+        goals: await dbGetAll('goals'),
+        finance: await dbGetAll('finance'),
+        notes: await dbGetAll('notes'),
+        pomodoro: await dbGetAll('pomodoro'),
+        exportDate: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smart-task-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Data berhasil di-export', 'success');
+};
+
+const importData = async (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!confirm('Ini akan MENIMPA semua data saat ini. Yakin?')) return;
+
+        const stores = ['tasks', 'habits', 'goals', 'finance', 'notes', 'pomodoro'];
+        for (const store of stores) {
+            const tx = db.transaction(store, 'readwrite');
+            await tx.objectStore(store).clear();
+        }
+
+        for (const [store, items] of Object.entries(data)) {
+            if (!stores.includes(store)) continue;
+            for (const item of items) {
+                await dbPut(store, item);
+            }
+        }
+
+        showToast('Data berhasil di-import', 'success');
+        renderPage(currentPage);
+    } catch (e) {
+        showToast('Gagal import: ' + e.message, 'error');
+    }
+    input.value = '';
+};
+
+// ==================== UTILITIES ====================
+const closeModal = (id) => {
+    document.getElementById(id).classList.remove('active');
+};
+
+const showToast = (message, type = 'info') => {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'} ${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+};
+
+const toggleTheme = () => {
+    document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.contains('light-mode');
+    document.getElementById('theme-icon').textContent = isLight ? '☀️' : '🌙';
+    document.getElementById('theme-text').textContent = isLight ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+};
+
+const showAddModal = () => {
+    if (currentPage === 'tasks') openTaskModal();
+    else if (currentPage === 'habits') openHabitModal();
+    else if (currentPage === 'goals') openGoalModal();
+    else if (currentPage === 'finance') openFinanceModal();
+    else if (currentPage === 'notes') openNoteModal();
+    else openTaskModal();
+};
+
+// ==================== PWA INSTALL ====================
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBtn').classList.add('show');
+});
+
+const installPWA = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+        document.getElementById('installBtn').classList.remove('show');
+        showToast('Aplikasi terinstall!', 'success');
+    }
+    deferredPrompt = null;
+};
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', async () => {
+    await initDB();
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-icon').textContent = '☀️';
+        document.getElementById('theme-text').textContent = 'Light Mode';
+    }
+
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('dashboardDate').textContent = now.toLocaleDateString('id-ID', options);
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => navigateTo(item.dataset.page));
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
+    });
+
+    renderDashboard();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW registration failed'));
+    }
+});
+    </script>
+</body>
+</html>
